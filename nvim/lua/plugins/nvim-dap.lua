@@ -48,6 +48,11 @@ return {
       local opts = { noremap = true, silent = true }
 
       -- Start test current method
+      vim.keymap.set("n", "<leader>dk", function()
+        require("dap-python").test_class()
+      end, opts)
+
+      -- Start test current method
       vim.keymap.set("n", "<leader>dm", function()
         require("dap-python").test_method()
       end, opts)
