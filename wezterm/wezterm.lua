@@ -22,6 +22,8 @@ end
 config.color_scheme = scheme_for_appearance(wezterm.gui.get_appearance())
 config.window_padding = { left = "0.5cell", right = "0.5cell", top = "0.5cell", bottom = "0.5cell" }
 config.default_cursor_style = "BlinkingBar"
+-- config.default_prog = { "/bin/zsh", "-l", "-c", "tmux attach || tmux" }
+config.scrollback_lines = 20000
 
 config.window_decorations = "RESIZE|INTEGRATED_BUTTONS"
 config.window_background_opacity = 0.96
@@ -44,5 +46,9 @@ config.keys = {
 	{ key = "LeftArrow", mods = "CMD", action = action.SendKey({ key = "Home" }) },
 	{ key = "RightArrow", mods = "CMD", action = action.SendKey({ key = "End" }) },
 	{ key = "p", mods = "CMD|SHIFT", action = action.ActivateCommandPalette },
+	{ key = "LeftArrow", mods = "OPT", action = wezterm.action.SendString("\x1bb") },
+	{ key = "RightArrow", mods = "OPT", action = wezterm.action.SendString("\x1bf") },
+	{ key = "Enter", mods = "CTRL", action = wezterm.action.SendString("\x1b[27;5;13~") }, -- Ctrl+Enter to send \e[27;5;13~ (Ctrl+Enter) to terminal
 }
+
 return config

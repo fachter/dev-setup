@@ -13,6 +13,7 @@ return {
         "shellcheck",
         "shfmt",
         "flake8",
+        "pyrefly",
       },
     },
   },
