@@ -78,23 +78,38 @@ export COLORTERM=truecolor
 
 alias pycharm="open -na \"PyCharm.app\""
 alias git_remove_branches="tmp=\$(mktemp) && git branch --format='%(refname:short)' | grep -v '^main$' > \$tmp && vim \$tmp && cat \$tmp | xargs git branch -D && rm \$tmp"
+alias ll="ls -lh"
 
 # =============================================================================
 # Functions
 # =============================================================================
 
 # workon: Start or attach to a Zellij session for the current directory
+# Usage: workon [folder]
 workon() {
-  local session_name="${PWD##*/}"
+  local target_dir="${1:-.}"
+  local resolved_dir=$(cd "$target_dir" 2>/dev/null && pwd)
+  if [[ -z "$resolved_dir" ]]; then
+    echo "Error: Directory '$target_dir' not found"
+    return 1
+  fi
+  local session_name="${resolved_dir##*/}"
   session_name="${session_name//./-}"
-  zellij --layout dev attach -c "$session_name"
+  (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
 }
 
 # workon-fullstack: Start or attach to a Zellij session with fullstack layout
+# Usage: workon-fullstack [folder]
 workon-fullstack() {
-  local session_name="${PWD##*/}"
+  local target_dir="${1:-.}"
+  local resolved_dir=$(cd "$target_dir" 2>/dev/null && pwd)
+  if [[ -z "$resolved_dir" ]]; then
+    echo "Error: Directory '$target_dir' not found"
+    return 1
+  fi
+  local session_name="${resolved_dir##*/}"
   session_name="${session_name//./-}-fullstack"
-  zellij --layout fullstack attach -c "$session_name"
+  (cd "$resolved_dir" && zellij --layout fullstack attach -c "$session_name")
 }
 
 # =============================================================================
