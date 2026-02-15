@@ -1,0 +1,14 @@
+# Ghostty terminal configuration
+
+# Clean look: hide titlebar but keep window controls (allows maximize)
+macos-titlebar-style = hidden
+
+# Font configuration
+font-family = JetBrains Mono
+font-size = 14
+
+# Theme
+theme = Gruvbox Dark
+
+# Terminal behavior
+copy-on-select = true

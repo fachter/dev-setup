@@ -39,4 +39,10 @@ link_config "tmux/tmux.conf" "$HOME/.tmux.conf"
 # Zsh (links the .zshrc from the root of the repo)
 link_config "dotfiles/zshrc" "$HOME/.zshrc"
 
-echo "✅ Setup complete! Restart your terminal or run 'source ~/.zshrc'"
+# Ghostty (links the whole folder)
+link_config "ghostty" "$HOME/.config/ghostty"
+
+# Zellij (links the whole folder)
+link_config "zellij" "$HOME/.config/zellij"
+
+echo "Setup complete! Restart your terminal or run 'source ~/.zshrc'"
