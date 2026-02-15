@@ -1,14 +1,28 @@
 #!/bin/zsh
 
+# Parse arguments
+CLEAN_CACHE=false
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --clean) CLEAN_CACHE=true ;;
+    *) echo "Unknown option: $1"; exit 1 ;;
+  esac
+  shift
+done
+
 # 1. Get the absolute path of the directory where this script is located
 # This ensures it works even if you run it from a different folder
 DOTFILES_DIR=$(cd "$(dirname "$0")" && pwd)
 
 echo "Setting up configs from: $DOTFILES_DIR"
 
-# 2. Clear Neovim caches/state for a clean reinstall
-echo "Cleaning Neovim cache and data..."
-rm -rf ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
+# 2. Clear Neovim caches/state for a clean reinstall (only with --clean flag)
+if [[ "$CLEAN_CACHE" == true ]]; then
+  echo "Cleaning Neovim cache and data..."
+  rm -rf ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
+else
+  echo "Skipping cache cleanup (use --clean to clear caches)"
+fi
 
 # 3. Create standard config directory
 mkdir -p ~/.config
@@ -44,5 +58,8 @@ link_config "ghostty" "$HOME/.config/ghostty"
 
 # Zellij (links the whole folder)
 link_config "zellij" "$HOME/.config/zellij"
+
+# Starship (links the config file)
+link_config "starship/starship.toml" "$HOME/.config/starship.toml"
 
 echo "Setup complete! Restart your terminal or run 'source ~/.zshrc'"

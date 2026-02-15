@@ -4,7 +4,7 @@
 macos-titlebar-style = hidden
 
 # Font configuration
-font-family = JetBrains Mono
+font-family = JetBrainsMono Nerd Font
 font-size = 14
 
 # Theme
