@@ -90,6 +90,13 @@ workon() {
   zellij --layout dev attach -c "$session_name"
 }
 
+# workon-fullstack: Start or attach to a Zellij session with fullstack layout
+workon-fullstack() {
+  local session_name="${PWD##*/}"
+  session_name="${session_name//./-}-fullstack"
+  zellij --layout fullstack attach -c "$session_name"
+}
+
 # =============================================================================
 # Starship Prompt (must be at the end)
 # =============================================================================
