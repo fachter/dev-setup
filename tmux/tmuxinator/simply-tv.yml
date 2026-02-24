@@ -1,0 +1,13 @@
+# /Users/felixachter/.config/tmuxinator/simply-tv.yml
+
+name: simply-tv
+root: ~/source/simplyservices/ai-halfspace/
+
+windows:
+  - editor:
+      - source ./backend/venv/bin/activate
+      - nvim .
+  - server:
+      - source ./backend/venv/bin/activate
+      - uv sync --active
+      - ai-halfspace

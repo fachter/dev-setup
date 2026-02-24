@@ -20,6 +20,11 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 export PATH="$ANDROID_HOME/platform-tools:$PATH"
 export PATH="$ANDROID_HOME/tools:$PATH"
 
+# Google
+
+export GOOGLE_CLOUD_PROJECT="lbf-pr-bu-digitalinno-01-prj"
+export CLOUDSDK_CORE_PROJECT="lbf-pr-bu-digitalinno-01-prj"
+
 # =============================================================================
 # Homebrew
 # =============================================================================
@@ -96,6 +101,18 @@ workon() {
   local session_name="${resolved_dir##*/}"
   session_name="${session_name//./-}"
   (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
+}
+
+workon-lbf() {
+  local target_dir="${1:-.}"
+  local resolved_dir=$(cd "$target_dir" 2>/dev/null && pwd)
+  if [[ -z "$resolved_dir" ]]; then
+    echo "Error: Directory '$target_dir' not found"
+    return 1
+  fi
+  local session_name="${resolved_dir##*/}"
+  session_name="${session_name//./-}"
+  (cd "$resolved_dir" && zellij --layout dev-gemini attach -c "$session_name")
 }
 
 # workon-fullstack: Start or attach to a Zellij session with fullstack layout

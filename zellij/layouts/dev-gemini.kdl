@@ -1,3 +1,4 @@
+
 layout {
     default_tab_template {
         pane size=1 borderless=true {
@@ -9,14 +10,19 @@ layout {
         }
     }
     tab name="Neovim" focus=true {
-        pane command="bash" {
-            args "-c" "[ -f .venv/bin/activate ] && source .venv/bin/activate || [ -f backend/.venv/bin/activate ] && source backend/.venv/bin/activate; exec nvim"
-        }
+        pane command="nvim"
     }
-    tab name="OpenCode" {
-        pane command="opencode"
+    tab name="GeminiCli" {
+        pane command="gemini"
     }
     tab name="Terminal" {
         pane 
+    }
+    tab name="Servers" {
+        pane stacked=true {
+            pane name="app"
+            pane name="backend"
+            pane name="db"
+        }
     }
 }
