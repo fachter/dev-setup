@@ -7,8 +7,13 @@ macos-titlebar-style = hidden
 font-family = JetBrainsMono Nerd Font
 font-size = 14
 
+# Runtime overrides (managed by rune command)
+config-file = ?~/.config/ghostty/rune-override
+
 # Theme
 theme = Gruvbox Dark
 
 # Terminal behavior
 copy-on-select = true
+
+# Presenter mode keybindings removed - use `rune` command instead

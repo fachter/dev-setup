@@ -22,8 +22,8 @@ export PATH="$ANDROID_HOME/tools:$PATH"
 
 # Google
 
-export GOOGLE_CLOUD_PROJECT="lbf-pr-bu-digitalinno-01-prj"
-export CLOUDSDK_CORE_PROJECT="lbf-pr-bu-digitalinno-01-prj"
+export GOOGLE_CLOUD_PROJECT="lbf-sb-homeapp-01-prj"
+export CLOUDSDK_CORE_PROJECT="lbf-sb-homeapp-01-prj"
 
 # =============================================================================
 # Homebrew
@@ -76,6 +76,7 @@ fi
 # =============================================================================
 
 export COLORTERM=truecolor
+export CLICOLOR=1
 
 # =============================================================================
 # Aliases
@@ -83,7 +84,7 @@ export COLORTERM=truecolor
 
 alias pycharm="open -na \"PyCharm.app\""
 alias git_remove_branches="tmp=\$(mktemp) && git branch --format='%(refname:short)' | grep -v '^main$' > \$tmp && vim \$tmp && cat \$tmp | xargs git branch -D && rm \$tmp"
-alias ll="ls -lh"
+alias ll="ls -lhF"
 
 # =============================================================================
 # Functions
@@ -127,6 +128,76 @@ workon-fullstack() {
   local session_name="${resolved_dir##*/}"
   session_name="${session_name//./-}-fullstack"
   (cd "$resolved_dir" && zellij --layout fullstack attach -c "$session_name")
+}
+
+# rune: Presenter mode with configurable zoom levels
+# Usage: rune [level]
+#   rune     - Toggle between OFF and level 1 (120%)
+#   rune 0   - Disable zoom (100% / default font size)
+#   rune 1   - 120% zoom
+#   rune 2   - 140% zoom
+#   rune N   - (100 + N*20)% zoom
+rune() {
+  local state_file="$HOME/.rune_level"
+  local override_file="$HOME/.config/ghostty/rune-override"
+  local base_font_size=14
+  local level="$1"
+  
+  # # Clear screen first
+  # clear
+  
+  # ASCII art banner
+  echo '╔══════════════════════════════════════╗'
+  echo '║  ██████╗ ██╗   ██╗███╗   ██╗███████╗ ║'
+  echo '║  ██╔══██╗██║   ██║████╗  ██║██╔════╝ ║'
+  echo '║  ██████╔╝██║   ██║██╔██╗ ██║█████╗   ║'
+  echo '║  ██╔══██╗██║   ██║██║╚██╗██║██╔══╝   ║'
+  echo '║  ██║  ██║╚██████╔╝██║ ╚████║███████╗ ║'
+  echo '║  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ║'
+  echo '╚══════════════════════════════════════╝'
+  
+  # Handle toggle mode (no argument)
+  if [[ -z "$level" ]]; then
+    if [[ -f "$state_file" ]]; then
+      level=0  # Currently on, turn off
+    else
+      level=1  # Currently off, turn on to level 1
+    fi
+  fi
+  
+  # Validate level is a non-negative integer
+  if ! [[ "$level" =~ ^[0-9]+$ ]]; then
+    echo "Error: Level must be a non-negative integer"
+    return 1
+  fi
+  
+  if [[ "$level" -eq 0 ]]; then
+    # Disable zoom - remove override file and state
+    rm -f "$override_file" "$state_file"
+    echo ""
+    echo "  Status: OFF"
+    echo "  Zoom:   100% (${base_font_size}pt)"
+  else
+    # Calculate font size: base * (1 + level * 0.2)
+    local zoom_percent=$((100 + level * 20))
+    local font_size=$(echo "scale=1; $base_font_size * $zoom_percent / 100" | bc)
+    
+    # Write override config
+    echo "font-size = $font_size" > "$override_file"
+    
+    # Save current level
+    echo "$level" > "$state_file"
+    
+    echo ""
+    echo "  Status: ON"
+    echo "  Level:  $level"
+    echo "  Zoom:   ${zoom_percent}% (${font_size}pt)"
+  fi
+  
+  # Trigger Ghostty config reload (Cmd+Shift+,)
+  osascript -e 'tell application "System Events" to keystroke "," using {command down, shift down}' 2>/dev/null
+  echo ""
+  echo "  Config reloaded."
 }
 
 # =============================================================================
