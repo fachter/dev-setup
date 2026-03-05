@@ -143,19 +143,6 @@ rune() {
   local base_font_size=14
   local level="$1"
   
-  # # Clear screen first
-  # clear
-  
-  # ASCII art banner
-  echo '╔══════════════════════════════════════╗'
-  echo '║  ██████╗ ██╗   ██╗███╗   ██╗███████╗ ║'
-  echo '║  ██╔══██╗██║   ██║████╗  ██║██╔════╝ ║'
-  echo '║  ██████╔╝██║   ██║██╔██╗ ██║█████╗   ║'
-  echo '║  ██╔══██╗██║   ██║██║╚██╗██║██╔══╝   ║'
-  echo '║  ██║  ██║╚██████╔╝██║ ╚████║███████╗ ║'
-  echo '║  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ║'
-  echo '╚══════════════════════════════════════╝'
-  
   # Handle toggle mode (no argument)
   if [[ -z "$level" ]]; then
     if [[ -f "$state_file" ]]; then
@@ -171,33 +158,91 @@ rune() {
     return 1
   fi
   
+  # Apply zoom BEFORE animation to prevent hopping
+  local zoom_percent=100
+  local font_size="$base_font_size"
+  
   if [[ "$level" -eq 0 ]]; then
     # Disable zoom - remove override file and state
     rm -f "$override_file" "$state_file"
-    echo ""
-    echo "  Status: OFF"
-    echo "  Zoom:   100% (${base_font_size}pt)"
   else
     # Calculate font size: base * (1 + level * 0.2)
-    local zoom_percent=$((100 + level * 20))
-    local font_size=$(echo "scale=1; $base_font_size * $zoom_percent / 100" | bc)
+    zoom_percent=$((100 + level * 20))
+    font_size=$(echo "scale=1; $base_font_size * $zoom_percent / 100" | bc)
     
     # Write override config
     echo "font-size = $font_size" > "$override_file"
     
     # Save current level
     echo "$level" > "$state_file"
-    
-    echo ""
-    echo "  Status: ON"
-    echo "  Level:  $level"
-    echo "  Zoom:   ${zoom_percent}% (${font_size}pt)"
   fi
   
   # Trigger Ghostty config reload (Cmd+Shift+,)
   osascript -e 'tell application "System Events" to keystroke "," using {command down, shift down}' 2>/dev/null
+  
+  # Small delay to let Ghostty apply the new font size
+  sleep 0.1
+  
+  # ANSI color codes
+  local DIM='\033[90m'
+  local BLUE='\033[34m'
+  local BRIGHT_BLUE='\033[94m'
+  local RESET='\033[0m'
+  
+  # ASCII art lines
+  local lines=(
+    '╔══════════════════════════════════════╗'
+    '║  ██████╗ ██╗   ██╗███╗   ██╗███████╗ ║'
+    '║  ██╔══██╗██║   ██║████╗  ██║██╔════╝ ║'
+    '║  ██████╔╝██║   ██║██╔██╗ ██║█████╗   ║'
+    '║  ██╔══██╗██║   ██║██║╚██╗██║██╔══╝   ║'
+    '║  ██║  ██║╚██████╔╝██║ ╚████║███████╗ ║'
+    '║  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ║'
+    '╚══════════════════════════════════════╝'
+  )
+  local num_lines=${#lines[@]}
+  
+  # Ensure cursor is restored on interrupt
+  trap 'printf "\033[?25h"' INT TERM
+  
+  # Clear screen and hide cursor
+  clear
+  printf '\033[?25l'
+  
+  # Phase 1: Line-by-line reveal in dim color (~240ms)
+  for line in "${lines[@]}"; do
+    printf "${DIM}%s${RESET}\n" "$line"
+    sleep 0.03
+  done
+  
+  # Phase 2: Color pulse - bright blue (~75ms)
+  printf "\033[${num_lines}A"  # Move cursor back up
+  for line in "${lines[@]}"; do
+    printf "${BRIGHT_BLUE}%s${RESET}\n" "$line"
+  done
+  sleep 0.075
+  
+  # Phase 3: Settle to normal blue (~75ms)
+  printf "\033[${num_lines}A"  # Move cursor back up
+  for line in "${lines[@]}"; do
+    printf "${BLUE}%s${RESET}\n" "$line"
+  done
+  sleep 0.075
+  
+  # Show cursor again
+  printf '\033[?25h'
+  trap - INT TERM
+  
+  # Display status
   echo ""
-  echo "  Config reloaded."
+  if [[ "$level" -eq 0 ]]; then
+    echo "  Status: OFF"
+    echo "  Zoom:   100% (${base_font_size}pt)"
+  else
+    echo "  Status: ON"
+    echo "  Level:  $level"
+    echo "  Zoom:   ${zoom_percent}% (${font_size}pt)"
+  fi
 }
 
 # =============================================================================
