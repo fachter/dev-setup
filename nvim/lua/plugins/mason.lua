@@ -14,6 +14,11 @@ return {
         "shfmt",
         "flake8",
         "ty",
+        -- Go
+        "gopls",
+        "goimports",
+        "gofumpt",
+        "golangci-lint",
       },
     },
   },

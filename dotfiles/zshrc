@@ -6,6 +6,7 @@
 # =============================================================================
 
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
+export PATH="$PATH":"$HOME/.pub-cache/bin"
 
 # PostgreSQL
 export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
@@ -51,6 +52,9 @@ complete -C '/usr/local/bin/aws_completer' aws
 # Terraform
 complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
+# Halfspace CLI
+eval "$(halfspace completion zsh)"
+
 # =============================================================================
 # NVM (Node Version Manager)
 # =============================================================================
@@ -91,17 +95,134 @@ alias ll="ls -lhF"
 # =============================================================================
 
 # workon: Start or attach to a Zellij session for the current directory
-# Usage: workon [folder]
+# Usage: workon [--fresh] [folder]
 workon() {
-  local target_dir="${1:-.}"
+  local fresh=0
+  local target_dir="."
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --fresh)
+        fresh=1
+        shift
+        ;;
+      *)
+        target_dir="$1"
+        shift
+        ;;
+    esac
+  done
+
   local resolved_dir=$(cd "$target_dir" 2>/dev/null && pwd)
   if [[ -z "$resolved_dir" ]]; then
     echo "Error: Directory '$target_dir' not found"
     return 1
   fi
+
   local session_name="${resolved_dir##*/}"
   session_name="${session_name//./-}"
-  (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
+
+  if [[ "$fresh" -eq 1 ]]; then
+    local fresh_session_name="${session_name}-fresh-$(date +%H%M%S)"
+    (cd "$resolved_dir" && zellij --layout dev -n dev -s "$fresh_session_name")
+  else
+    (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
+  fi
+}
+
+# workon-issue: Prepare issue worktree and open dev session with OpenCode message
+# Usage: workon-issue [--fresh] <issue-number>
+workon-issue() {
+  local fresh=0
+  local issue_number=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --fresh)
+        fresh=1
+        shift
+        ;;
+      -* )
+        echo "Error: Unknown option '$1'"
+        echo "Usage: workon-issue [--fresh] <issue-number>"
+        return 1
+        ;;
+      *)
+        if [[ -n "$issue_number" ]]; then
+          echo "Error: Only one issue number is supported"
+          echo "Usage: workon-issue [--fresh] <issue-number>"
+          return 1
+        fi
+        issue_number="$1"
+        shift
+        ;;
+    esac
+  done
+
+  if [[ -z "$issue_number" ]]; then
+    echo "Usage: workon-issue [--fresh] <issue-number>"
+    return 1
+  fi
+
+  local configs_dir="$HOME/source/configs"
+  local start_issue_script="$configs_dir/scripts/start-issue.sh"
+  local repo_root
+  local setup_output
+  local worktree_path=""
+  local prompt_file=""
+
+  if [[ ! -x "$start_issue_script" ]]; then
+    echo "Error: '$start_issue_script' not found or not executable"
+    return 1
+  fi
+
+  repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+  if [[ -z "$repo_root" ]]; then
+    echo "Error: workon-issue must be run inside a git repository"
+    return 1
+  fi
+
+  if ! setup_output=$(cd "$repo_root" && "$start_issue_script" --no-launch "$issue_number"); then
+    return 1
+  fi
+
+  while IFS= read -r line; do
+    case "$line" in
+      WORKTREE_PATH=*) worktree_path="${line#WORKTREE_PATH=}" ;;
+      PROMPT_FILE=*) prompt_file="${line#PROMPT_FILE=}" ;;
+    esac
+  done <<< "$setup_output"
+
+  if [[ -z "$worktree_path" ]]; then
+    echo "Error: Could not determine worktree path from start-issue output"
+    return 1
+  fi
+
+  if [[ -z "$prompt_file" ]]; then
+    prompt_file="$worktree_path/.issue-prompt.md"
+  fi
+
+  local session_name="issue-${issue_number}"
+
+  if [[ ! -f "$prompt_file" ]]; then
+    echo "Error: Prompt file not found at '$prompt_file'"
+    return 1
+  fi
+
+  if [[ "$fresh" -eq 1 ]]; then
+    local fresh_session_name="${session_name}-fresh-$(date +%H%M%S)"
+    (
+      cd "$worktree_path" || exit 1
+      export OPENCODE_MESSAGE="$(<"$prompt_file")"
+      zellij --layout dev -n dev -s "$fresh_session_name"
+    )
+  else
+    (
+      cd "$worktree_path" || exit 1
+      export OPENCODE_MESSAGE="$(<"$prompt_file")"
+      zellij --layout dev attach -c "$session_name"
+    )
+  fi
 }
 
 workon-lbf() {
@@ -250,3 +371,4 @@ rune() {
 # =============================================================================
 
 eval "$(starship init zsh)"
+export PATH="$(go env GOPATH)/bin:$PATH"

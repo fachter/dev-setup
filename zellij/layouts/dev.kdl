@@ -14,7 +14,9 @@ layout {
         }
     }
     tab name="OpenCode" {
-        pane command="opencode"
+        pane command="bash" {
+            args "-c" "if [ -n \"$OPENCODE_MESSAGE\" ]; then exec opencode run \"$OPENCODE_MESSAGE\"; else exec opencode; fi"
+        }
     }
     tab name="Terminal" {
         pane 

@@ -22,7 +22,7 @@ Personal configuration files for macOS development environment.
 
 # Install required dependencies
 brew install --cask ghostty font-jetbrains-mono-nerd-font
-brew install neovim zellij tmux starship zsh-autosuggestions zsh-syntax-highlighting
+brew install neovim zellij tmux starship zsh-autosuggestions zsh-syntax-highlighting fd fzf
 ```
 
 ### Optional
@@ -73,8 +73,20 @@ cd ~/source/Config
 ### Zellij Sessions
 
 ```bash
-# Start a Zellij session for current or specified directory
+# Start or attach a Zellij session for current or specified directory
 workon [folder]
+
+# Always start a fresh session (never attach)
+workon --fresh [folder]
+
+# Prepare issue worktree and start/attach issue session with OpenCode prompt
+workon-issue [issue-number]
+
+# Same as above, but always start fresh session
+workon-issue --fresh [issue-number]
+
+# Worktrees are stored under ~/source/.worktrees/<owner-repo>/
+# Override with WORKTREE_BASE=/custom/path
 
 # Start with fullstack layout (multiple panes)
 workon-fullstack [folder]
