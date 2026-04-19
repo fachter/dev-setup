@@ -410,7 +410,10 @@ rune() {
   fi
 }
 
-if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+if command -v wt >/dev/null 2>&1; then
+  eval "$(command wt config shell init zsh)"
+  compdef wts=wt
+fi
 
 # =============================================================================
 # Starship Prompt (must be at the end)
