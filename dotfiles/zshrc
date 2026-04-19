@@ -16,6 +16,9 @@ export CPPFLAGS="-I/opt/homebrew/opt/postgresql@17/include"
 # Java
 export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"
 
+# Go
+export PATH="$(go env GOPATH)/bin:$PATH"
+
 # Android SDK
 export ANDROID_HOME="$HOME/Library/Android/sdk"
 export PATH="$ANDROID_HOME/platform-tools:$PATH"
@@ -407,11 +410,10 @@ rune() {
   fi
 }
 
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+
 # =============================================================================
 # Starship Prompt (must be at the end)
 # =============================================================================
 
 eval "$(starship init zsh)"
-export PATH="$(go env GOPATH)/bin:$PATH"
-
-if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
