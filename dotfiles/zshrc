@@ -53,7 +53,10 @@ complete -C '/usr/local/bin/aws_completer' aws
 complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
 # Halfspace CLI
-eval "$(halfspace completion zsh)"
+# add if statement to check if halfspace is installed before enabling completion
+if command -v halfspace &> /dev/null; then
+  eval "$(halfspace completion zsh)"
+fi
 
 # =============================================================================
 # NVM (Node Version Manager)
@@ -372,3 +375,5 @@ rune() {
 
 eval "$(starship init zsh)"
 export PATH="$(go env GOPATH)/bin:$PATH"
+
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
