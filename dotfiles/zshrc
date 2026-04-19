@@ -127,10 +127,48 @@ workon() {
 
   if [[ "$fresh" -eq 1 ]]; then
     local fresh_session_name="${session_name}-fresh-$(date +%H%M%S)"
-    (cd "$resolved_dir" && zellij --layout dev -n dev -s "$fresh_session_name")
+    (cd "$resolved_dir" && zellij -n dev -s "$fresh_session_name")
   else
-    (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
+    if [[ -n "$ZELLIJ" ]]; then
+      if ! zellij action switch-session --cwd "$resolved_dir" "$session_name"; then
+        zellij action switch-session --cwd "$resolved_dir" --layout dev "$session_name"
+      fi
+    else
+      (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
+    fi
   fi
+}
+
+wts() {
+  if ! command -v wt >/dev/null 2>&1; then
+    echo "Error: wt command not found"
+    return 1
+  fi
+
+  local has_branch=0
+  local arg
+  for arg in "$@"; do
+    if [[ "$arg" == "--" ]]; then
+      break
+    fi
+    if [[ "$arg" == "-" || "$arg" == "^" || "$arg" == "@" || "$arg" != -* ]]; then
+      has_branch=1
+      break
+    fi
+  done
+
+  if [[ "$has_branch" -eq 1 ]]; then
+    wt switch --no-cd -x 'workon "{{ worktree_path }}"' "$@"
+    return
+  fi
+
+  local selected_branch
+  selected_branch=$(wt switch --no-cd "$@") || return 1
+  if [[ -z "$selected_branch" ]]; then
+    return 1
+  fi
+
+  wt switch --no-cd -x 'workon "{{ worktree_path }}"' "$selected_branch"
 }
 
 # workon-issue: Prepare issue worktree and open dev session with OpenCode message
