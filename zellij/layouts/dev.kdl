@@ -9,10 +9,14 @@ layout {
         }
     }
     tab name="Neovim" focus=true {
-        pane command="nvim"
+        pane command="bash" {
+            args "-c" "[ -f .venv/bin/activate ] && source .venv/bin/activate || [ -f backend/.venv/bin/activate ] && source backend/.venv/bin/activate; exec nvim"
+        }
     }
     tab name="OpenCode" {
-        pane command="opencode"
+        pane command="bash" {
+            args "-c" "if [ -n \"$OPENCODE_MESSAGE\" ]; then exec opencode run \"$OPENCODE_MESSAGE\"; else exec opencode; fi"
+        }
     }
     tab name="Terminal" {
         pane 

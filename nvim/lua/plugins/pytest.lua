@@ -28,13 +28,8 @@ return {
   {
     "richardhapb/pytest.nvim",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
-    opts = {}, -- define the options here
+    opts = {},
     config = function(_, opts)
-      require("nvim-treesitter")
-      require("nvim-treesitter.config").setup({
-        ensure_installed = { "python", "xml" },
-      })
-
       require("pytest").setup(opts)
     end,
   },

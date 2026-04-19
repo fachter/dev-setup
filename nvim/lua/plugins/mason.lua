@@ -13,7 +13,12 @@ return {
         "shellcheck",
         "shfmt",
         "flake8",
-        "pyrefly",
+        "ty",
+        -- Go
+        "gopls",
+        "goimports",
+        "gofumpt",
+        "golangci-lint",
       },
     },
   },

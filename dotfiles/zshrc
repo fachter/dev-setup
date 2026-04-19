@@ -6,6 +6,7 @@
 # =============================================================================
 
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
+export PATH="$PATH":"$HOME/.pub-cache/bin"
 
 # PostgreSQL
 export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
@@ -19,6 +20,11 @@ export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"
 export ANDROID_HOME="$HOME/Library/Android/sdk"
 export PATH="$ANDROID_HOME/platform-tools:$PATH"
 export PATH="$ANDROID_HOME/tools:$PATH"
+
+# Google
+
+export GOOGLE_CLOUD_PROJECT="lbf-sb-homeapp-01-prj"
+export CLOUDSDK_CORE_PROJECT="lbf-sb-homeapp-01-prj"
 
 # =============================================================================
 # Homebrew
@@ -46,6 +52,9 @@ complete -C '/usr/local/bin/aws_completer' aws
 # Terraform
 complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
+# Halfspace CLI
+eval "$(halfspace completion zsh)"
+
 # =============================================================================
 # NVM (Node Version Manager)
 # =============================================================================
@@ -58,12 +67,12 @@ export NVM_DIR="$HOME/.nvm"
 # Google Cloud SDK
 # =============================================================================
 
-if [ -f '~/google-cloud-sdk/path.zsh.inc' ]; then
-  source '~/google-cloud-sdk/path.zsh.inc'
+if [ -f '/Users/felix.achter/google-cloud-sdk/path.zsh.inc' ]; then
+  source '/Users/felix.achter/google-cloud-sdk/path.zsh.inc'
 fi
 
-if [ -f '~/google-cloud-sdk/completion.zsh.inc' ]; then
-  source '~/google-cloud-sdk/completion.zsh.inc'
+if [ -f '/Users/felix.achter/google-cloud-sdk/completion.zsh.inc' ]; then
+  source '/Users/felix.achter/google-cloud-sdk/completion.zsh.inc'
 fi
 
 # =============================================================================
@@ -71,6 +80,7 @@ fi
 # =============================================================================
 
 export COLORTERM=truecolor
+export CLICOLOR=1
 
 # =============================================================================
 # Aliases
@@ -78,15 +88,144 @@ export COLORTERM=truecolor
 
 alias pycharm="open -na \"PyCharm.app\""
 alias git_remove_branches="tmp=\$(mktemp) && git branch --format='%(refname:short)' | grep -v '^main$' > \$tmp && vim \$tmp && cat \$tmp | xargs git branch -D && rm \$tmp"
-alias ll="ls -lh"
+alias ll="ls -lhF"
 
 # =============================================================================
 # Functions
 # =============================================================================
 
 # workon: Start or attach to a Zellij session for the current directory
-# Usage: workon [folder]
+# Usage: workon [--fresh] [folder]
 workon() {
+  local fresh=0
+  local target_dir="."
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --fresh)
+        fresh=1
+        shift
+        ;;
+      *)
+        target_dir="$1"
+        shift
+        ;;
+    esac
+  done
+
+  local resolved_dir=$(cd "$target_dir" 2>/dev/null && pwd)
+  if [[ -z "$resolved_dir" ]]; then
+    echo "Error: Directory '$target_dir' not found"
+    return 1
+  fi
+
+  local session_name="${resolved_dir##*/}"
+  session_name="${session_name//./-}"
+
+  if [[ "$fresh" -eq 1 ]]; then
+    local fresh_session_name="${session_name}-fresh-$(date +%H%M%S)"
+    (cd "$resolved_dir" && zellij --layout dev -n dev -s "$fresh_session_name")
+  else
+    (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
+  fi
+}
+
+# workon-issue: Prepare issue worktree and open dev session with OpenCode message
+# Usage: workon-issue [--fresh] <issue-number>
+workon-issue() {
+  local fresh=0
+  local issue_number=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --fresh)
+        fresh=1
+        shift
+        ;;
+      -* )
+        echo "Error: Unknown option '$1'"
+        echo "Usage: workon-issue [--fresh] <issue-number>"
+        return 1
+        ;;
+      *)
+        if [[ -n "$issue_number" ]]; then
+          echo "Error: Only one issue number is supported"
+          echo "Usage: workon-issue [--fresh] <issue-number>"
+          return 1
+        fi
+        issue_number="$1"
+        shift
+        ;;
+    esac
+  done
+
+  if [[ -z "$issue_number" ]]; then
+    echo "Usage: workon-issue [--fresh] <issue-number>"
+    return 1
+  fi
+
+  local configs_dir="$HOME/source/configs"
+  local start_issue_script="$configs_dir/scripts/start-issue.sh"
+  local repo_root
+  local setup_output
+  local worktree_path=""
+  local prompt_file=""
+
+  if [[ ! -x "$start_issue_script" ]]; then
+    echo "Error: '$start_issue_script' not found or not executable"
+    return 1
+  fi
+
+  repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+  if [[ -z "$repo_root" ]]; then
+    echo "Error: workon-issue must be run inside a git repository"
+    return 1
+  fi
+
+  if ! setup_output=$(cd "$repo_root" && "$start_issue_script" --no-launch "$issue_number"); then
+    return 1
+  fi
+
+  while IFS= read -r line; do
+    case "$line" in
+      WORKTREE_PATH=*) worktree_path="${line#WORKTREE_PATH=}" ;;
+      PROMPT_FILE=*) prompt_file="${line#PROMPT_FILE=}" ;;
+    esac
+  done <<< "$setup_output"
+
+  if [[ -z "$worktree_path" ]]; then
+    echo "Error: Could not determine worktree path from start-issue output"
+    return 1
+  fi
+
+  if [[ -z "$prompt_file" ]]; then
+    prompt_file="$worktree_path/.issue-prompt.md"
+  fi
+
+  local session_name="issue-${issue_number}"
+
+  if [[ ! -f "$prompt_file" ]]; then
+    echo "Error: Prompt file not found at '$prompt_file'"
+    return 1
+  fi
+
+  if [[ "$fresh" -eq 1 ]]; then
+    local fresh_session_name="${session_name}-fresh-$(date +%H%M%S)"
+    (
+      cd "$worktree_path" || exit 1
+      export OPENCODE_MESSAGE="$(<"$prompt_file")"
+      zellij --layout dev -n dev -s "$fresh_session_name"
+    )
+  else
+    (
+      cd "$worktree_path" || exit 1
+      export OPENCODE_MESSAGE="$(<"$prompt_file")"
+      zellij --layout dev attach -c "$session_name"
+    )
+  fi
+}
+
+workon-lbf() {
   local target_dir="${1:-.}"
   local resolved_dir=$(cd "$target_dir" 2>/dev/null && pwd)
   if [[ -z "$resolved_dir" ]]; then
@@ -95,7 +234,7 @@ workon() {
   fi
   local session_name="${resolved_dir##*/}"
   session_name="${session_name//./-}"
-  (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
+  (cd "$resolved_dir" && zellij --layout dev-gemini attach -c "$session_name")
 }
 
 # workon-fullstack: Start or attach to a Zellij session with fullstack layout
@@ -112,8 +251,124 @@ workon-fullstack() {
   (cd "$resolved_dir" && zellij --layout fullstack attach -c "$session_name")
 }
 
+# rune: Presenter mode with configurable zoom levels
+# Usage: rune [level]
+#   rune     - Toggle between OFF and level 1 (120%)
+#   rune 0   - Disable zoom (100% / default font size)
+#   rune 1   - 120% zoom
+#   rune 2   - 140% zoom
+#   rune N   - (100 + N*20)% zoom
+rune() {
+  local state_file="$HOME/.rune_level"
+  local override_file="$HOME/.config/ghostty/rune-override"
+  local base_font_size=14
+  local level="$1"
+  
+  # Handle toggle mode (no argument)
+  if [[ -z "$level" ]]; then
+    if [[ -f "$state_file" ]]; then
+      level=0  # Currently on, turn off
+    else
+      level=1  # Currently off, turn on to level 1
+    fi
+  fi
+  
+  # Validate level is a non-negative integer
+  if ! [[ "$level" =~ ^[0-9]+$ ]]; then
+    echo "Error: Level must be a non-negative integer"
+    return 1
+  fi
+  
+  # Apply zoom BEFORE animation to prevent hopping
+  local zoom_percent=100
+  local font_size="$base_font_size"
+  
+  if [[ "$level" -eq 0 ]]; then
+    # Disable zoom - remove override file and state
+    rm -f "$override_file" "$state_file"
+  else
+    # Calculate font size: base * (1 + level * 0.2)
+    zoom_percent=$((100 + level * 20))
+    font_size=$(echo "scale=1; $base_font_size * $zoom_percent / 100" | bc)
+    
+    # Write override config
+    echo "font-size = $font_size" > "$override_file"
+    
+    # Save current level
+    echo "$level" > "$state_file"
+  fi
+  
+  # Trigger Ghostty config reload (Cmd+Shift+,)
+  osascript -e 'tell application "System Events" to keystroke "," using {command down, shift down}' 2>/dev/null
+  
+  # Small delay to let Ghostty apply the new font size
+  sleep 0.1
+  
+  # ANSI color codes
+  local DIM='\033[90m'
+  local BLUE='\033[34m'
+  local BRIGHT_BLUE='\033[94m'
+  local RESET='\033[0m'
+  
+  # ASCII art lines
+  local lines=(
+    '╔══════════════════════════════════════╗'
+    '║  ██████╗ ██╗   ██╗███╗   ██╗███████╗ ║'
+    '║  ██╔══██╗██║   ██║████╗  ██║██╔════╝ ║'
+    '║  ██████╔╝██║   ██║██╔██╗ ██║█████╗   ║'
+    '║  ██╔══██╗██║   ██║██║╚██╗██║██╔══╝   ║'
+    '║  ██║  ██║╚██████╔╝██║ ╚████║███████╗ ║'
+    '║  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ║'
+    '╚══════════════════════════════════════╝'
+  )
+  local num_lines=${#lines[@]}
+  
+  # Ensure cursor is restored on interrupt
+  trap 'printf "\033[?25h"' INT TERM
+  
+  # Clear screen and hide cursor
+  clear
+  printf '\033[?25l'
+  
+  # Phase 1: Line-by-line reveal in dim color (~240ms)
+  for line in "${lines[@]}"; do
+    printf "${DIM}%s${RESET}\n" "$line"
+    sleep 0.03
+  done
+  
+  # Phase 2: Color pulse - bright blue (~75ms)
+  printf "\033[${num_lines}A"  # Move cursor back up
+  for line in "${lines[@]}"; do
+    printf "${BRIGHT_BLUE}%s${RESET}\n" "$line"
+  done
+  sleep 0.075
+  
+  # Phase 3: Settle to normal blue (~75ms)
+  printf "\033[${num_lines}A"  # Move cursor back up
+  for line in "${lines[@]}"; do
+    printf "${BLUE}%s${RESET}\n" "$line"
+  done
+  sleep 0.075
+  
+  # Show cursor again
+  printf '\033[?25h'
+  trap - INT TERM
+  
+  # Display status
+  echo ""
+  if [[ "$level" -eq 0 ]]; then
+    echo "  Status: OFF"
+    echo "  Zoom:   100% (${base_font_size}pt)"
+  else
+    echo "  Status: ON"
+    echo "  Level:  $level"
+    echo "  Zoom:   ${zoom_percent}% (${font_size}pt)"
+  fi
+}
+
 # =============================================================================
 # Starship Prompt (must be at the end)
 # =============================================================================
 
 eval "$(starship init zsh)"
+export PATH="$(go env GOPATH)/bin:$PATH"
