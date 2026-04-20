@@ -57,6 +57,7 @@ cd ~/source/Config
 | `tmux/tmux.conf` | `~/.tmux.conf` |
 | `dotfiles/zshrc` | `~/.zshrc` |
 | `starship/starship.toml` | `~/.config/starship.toml` |
+| `worktrunk/config.toml` | `~/.config/worktrunk/config.toml` |
 
 ## Usage
 
@@ -87,6 +88,10 @@ workon-issue --fresh [issue-number]
 
 # Worktrees are stored under ~/source/.worktrees/<owner-repo>/
 # Override with WORKTREE_BASE=/custom/path
+
+# Worktrunk global defaults (via ~/.config/worktrunk/config.toml)
+# New wt worktrees are stored under ~/source/.worktrees/<repo>/<branch>/
+# .env, backend/.env, and frontend/.env are copied if present
 
 # Start with fullstack layout (multiple panes)
 workon-fullstack [folder]

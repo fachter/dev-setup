@@ -1,0 +1,15 @@
+worktree-path = "~/source/.worktrees/{{ repo }}/{{ branch | sanitize }}"
+
+[post-start]
+copy_env_files = """
+source_root="{{ primary_worktree_path }}"
+
+for f in .env backend/.env frontend/.env; do
+  src="$source_root/$f"
+  dst="{{ worktree_path }}/$f"
+  if [ -f "$src" ]; then
+    mkdir -p "$(dirname "$dst")"
+    cp "$src" "$dst"
+  fi
+done
+"""
