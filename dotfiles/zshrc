@@ -100,6 +100,120 @@ alias ll="ls -lhF"
 # Functions
 # =============================================================================
 
+_workon_sanitize_session_part() {
+  local value="$1"
+  value="${value//./-}"
+  value="$(printf '%s' "$value" | tr -c '[:alnum:]_-' '-')"
+  value="${value##-}"
+  value="${value%%-}"
+
+  if [[ -z "$value" ]]; then
+    value="worktree"
+  fi
+
+  printf '%s' "$value"
+}
+
+_workon_hash4() {
+  local value="$1"
+  local digest
+
+  digest="$(printf '%s' "$value" | shasum 2>/dev/null)"
+  digest="${digest%% *}"
+  printf '%s' "${digest[1,4]}"
+}
+
+_workon_has_leaf_collision() {
+  local resolved_dir="$1"
+  local branch_name="$2"
+  local branch_leaf="$3"
+  local ref
+
+  if [[ -z "$branch_name" || -z "$branch_leaf" ]]; then
+    return 1
+  fi
+
+  while IFS= read -r ref; do
+    if [[ "$ref" != "$branch_name" && "${ref##*/}" == "$branch_leaf" ]]; then
+      return 0
+    fi
+  done < <(git -C "$resolved_dir" for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null)
+
+  return 1
+}
+
+_workon_session_name_for_dir() {
+  local resolved_dir="$1"
+  local max_len=32
+  local hash_len=4
+  local branch_name
+  local branch_leaf
+  local branch_type=""
+  local use_branch_name=0
+  local base_name
+  local session_name
+  local hash_source
+  local suffix
+  local truncate_len
+  local type_suffix
+
+  branch_name="$(git -C "$resolved_dir" symbolic-ref --quiet --short HEAD 2>/dev/null)"
+  if [[ -n "$branch_name" && "$branch_name" != "main" ]]; then
+    use_branch_name=1
+    branch_leaf="${branch_name##*/}"
+    if [[ "$branch_name" == */* ]]; then
+      branch_type="${branch_name%%/*}"
+    fi
+  else
+    branch_leaf="${resolved_dir##*/}"
+  fi
+  hash_source="$resolved_dir"
+  if [[ "$use_branch_name" -eq 1 ]]; then
+    hash_source="$branch_name"
+  fi
+
+  base_name="$(_workon_sanitize_session_part "$branch_leaf")"
+  session_name="$base_name"
+
+  if [[ "$use_branch_name" -eq 1 ]] && _workon_has_leaf_collision "$resolved_dir" "$branch_name" "$branch_leaf"; then
+    type_suffix="$(_workon_sanitize_session_part "$branch_type")"
+    if [[ -n "$type_suffix" && $(( ${#base_name} + 1 + ${#type_suffix} )) -le "$max_len" ]]; then
+      session_name="${base_name}-${type_suffix}"
+    else
+      suffix="$(_workon_hash4 "$hash_source")"
+      truncate_len=$((max_len - hash_len - 1))
+      session_name="${base_name[1,$truncate_len]}-${suffix}"
+    fi
+  fi
+
+  if [[ ${#session_name} -gt "$max_len" ]]; then
+    suffix="$(_workon_hash4 "$hash_source")"
+    truncate_len=$((max_len - hash_len - 1))
+    session_name="${base_name[1,$truncate_len]}-${suffix}"
+  fi
+
+  printf '%s' "$session_name"
+}
+
+_workon_zellij_session_exists() {
+  local session_name="$1"
+
+  zellij list-sessions --short --no-formatting 2>/dev/null | command grep -Fxq "$session_name"
+}
+
+_workon_fresh_session_name() {
+  local base_name="$1"
+  local suffix="fresh-$(date +%H%M%S)"
+  local max_len=36
+  local max_base_len=$((max_len - ${#suffix} - 1))
+
+  if [[ ${#base_name} -gt "$max_base_len" ]]; then
+    base_name="${base_name[1,$max_base_len]}"
+  fi
+
+  printf '%s' "${base_name}-${suffix}"
+}
+
 # workon: Start or attach to a Zellij session for the current directory
 # Usage: workon [--fresh] [folder]
 workon() {
@@ -125,16 +239,19 @@ workon() {
     return 1
   fi
 
-  local session_name="${resolved_dir##*/}"
-  session_name="${session_name//./-}"
+  local session_name
+  session_name="$(_workon_session_name_for_dir "$resolved_dir")"
 
   if [[ "$fresh" -eq 1 ]]; then
-    local fresh_session_name="${session_name}-fresh-$(date +%H%M%S)"
+    local fresh_session_name
+    fresh_session_name="$(_workon_fresh_session_name "$session_name")"
     (cd "$resolved_dir" && zellij -n dev -s "$fresh_session_name")
   else
     if [[ -n "$ZELLIJ" ]]; then
-      if ! zellij action switch-session --cwd "$resolved_dir" "$session_name"; then
-        zellij action switch-session --cwd "$resolved_dir" --layout dev "$session_name"
+      if _workon_zellij_session_exists "$session_name"; then
+        zellij action switch-session --cwd "$resolved_dir" "$session_name"
+      else
+        (cd "$resolved_dir" && zellij -n dev -s "$session_name")
       fi
     else
       (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
@@ -420,3 +537,10 @@ fi
 # =============================================================================
 
 eval "$(starship init zsh)"
+
+# bun completions
+[ -s "/Users/felix.achter/.bun/_bun" ] && source "/Users/felix.achter/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
