@@ -73,6 +73,8 @@ cd ~/source/Config
 
 ### Zellij Sessions
 
+The `dev` layout has three tabs: **Neovim**, **Agent** (two stacked shells for Cursor `agent`), and **Terminal**.
+
 ```bash
 # Start or attach a Zellij session for current or specified directory
 workon [folder]
@@ -80,7 +82,7 @@ workon [folder]
 # Always start a fresh session (never attach)
 workon --fresh [folder]
 
-# Prepare issue worktree and start/attach issue session with OpenCode prompt
+# Prepare issue worktree and start/attach dev session (Agent tab: two terminals; run `agent` manually)
 workon-issue [issue-number]
 
 # Same as above, but always start fresh session

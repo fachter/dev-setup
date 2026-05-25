@@ -174,7 +174,7 @@ wts() {
   wt switch --no-cd -x 'workon "{{ worktree_path }}"' "$selected_branch"
 }
 
-# workon-issue: Prepare issue worktree and open dev session with OpenCode message
+# workon-issue: Prepare issue worktree and open dev session (run agent manually in Agent tab)
 # Usage: workon-issue [--fresh] <issue-number>
 workon-issue() {
   local fresh=0
@@ -253,17 +253,17 @@ workon-issue() {
     return 1
   fi
 
+  echo "Issue prompt: $prompt_file"
+
   if [[ "$fresh" -eq 1 ]]; then
     local fresh_session_name="${session_name}-fresh-$(date +%H%M%S)"
     (
       cd "$worktree_path" || exit 1
-      export OPENCODE_MESSAGE="$(<"$prompt_file")"
       zellij --layout dev -n dev -s "$fresh_session_name"
     )
   else
     (
       cd "$worktree_path" || exit 1
-      export OPENCODE_MESSAGE="$(<"$prompt_file")"
       zellij --layout dev attach -c "$session_name"
     )
   fi
