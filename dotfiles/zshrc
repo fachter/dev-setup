@@ -49,6 +49,9 @@ source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.z
 autoload bashcompinit && bashcompinit
 autoload -Uz compinit && compinit
 
+# AZ CLI
+source ~/.azure-cli-venv/bin/az.completion.sh 2>/dev/null || true
+
 # AWS CLI
 complete -C '/usr/local/bin/aws_completer' aws
 
