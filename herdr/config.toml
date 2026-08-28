@@ -1,4 +1,8 @@
 onboarding = false
+
+[theme]
+name = "gruvbox"
+
 [terminal]
 new_cwd = "follow"
 

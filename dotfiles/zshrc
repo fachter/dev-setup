@@ -88,6 +88,12 @@ fi
 export COLORTERM=truecolor
 export CLICOLOR=1
 
+# Herdr hardcodes TERM=xterm-256color in panes; Ghostty's terminfo
+# is what Cursor Agent / nvim expect for truecolor and mode colors.
+if [[ "${HERDR_ENV:-}" == "1" && "$TERM" == "xterm-256color" ]]; then
+  export TERM=xterm-ghostty
+fi
+
 # =============================================================================
 # Dotfiles root (zshrc lives in dotfiles/)
 # =============================================================================
