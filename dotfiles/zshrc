@@ -95,10 +95,11 @@ if [[ "${HERDR_ENV:-}" == "1" && "$TERM" == "xterm-256color" ]]; then
 fi
 
 # =============================================================================
-# Dotfiles root (zshrc lives in dotfiles/)
+# Dotfiles root (this file lives in <repo>/dotfiles/zshrc)
+# $0 is the shell name when .zshrc is sourced; %x is this file.
 # =============================================================================
 
-export DEV_SETUP_DIR="${0:A:h:h}"
+export DEV_SETUP_DIR="${${(%):-%x}:A:h:h}"
 
 # =============================================================================
 # Aliases
