@@ -27,6 +27,7 @@ fi
 # 3. Create standard config directory
 mkdir -p ~/.config
 mkdir -p ~/.config/worktrunk
+mkdir -p ~/.config/herdr
 
 # 4. Helper function to create symlinks safely
 # Usage: link_config [source_subdir] [target_path]
@@ -65,5 +66,8 @@ link_config "starship/starship.toml" "$HOME/.config/starship.toml"
 
 # Worktrunk (links the global user config file)
 link_config "worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
+
+# Herdr (links the global user config file)
+link_config "herdr/config.toml" "$HOME/.config/herdr/config.toml"
 
 echo "Setup complete! Restart your terminal or run 'source ~/.zshrc'"

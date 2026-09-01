@@ -16,4 +16,8 @@ theme = Gruvbox Dark
 # Terminal behavior
 copy-on-select = true
 
+# Right Option sends Alt (Herdr prefix+alt+…, LazyVim Alt maps).
+# Left Option stays macOS special characters.
+macos-option-as-alt = right
+
 # Presenter mode keybindings removed - use `rune` command instead

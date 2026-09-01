@@ -90,6 +90,21 @@ fi
 
 export COLORTERM=truecolor
 export CLICOLOR=1
+export EDITOR=nvim
+export VISUAL=nvim
+
+# Herdr hardcodes TERM=xterm-256color in panes; Ghostty's terminfo
+# is what Cursor Agent / nvim expect for truecolor and mode colors.
+if [[ "${HERDR_ENV:-}" == "1" && "$TERM" == "xterm-256color" ]]; then
+  export TERM=xterm-ghostty
+fi
+
+# =============================================================================
+# Dotfiles root (this file lives in <repo>/dotfiles/zshrc)
+# $0 is the shell name when .zshrc is sourced; %x is this file.
+# =============================================================================
+
+export DEV_SETUP_DIR="${${(%):-%x}:A:h:h}"
 
 # =============================================================================
 # Aliases
@@ -103,7 +118,7 @@ alias ll="ls -lhF"
 # Functions
 # =============================================================================
 
-# workon: Start or attach to a Zellij session for the current directory
+# workon: Start or attach to a Herdr dev workspace for the current directory
 # Usage: workon [--fresh] [folder]
 workon() {
   local fresh=0
@@ -131,18 +146,23 @@ workon() {
   local session_name="${resolved_dir##*/}"
   session_name="${session_name//./-}"
 
-  if [[ "$fresh" -eq 1 ]]; then
-    local fresh_session_name="${session_name}-fresh-$(date +%H%M%S)"
-    (cd "$resolved_dir" && zellij -n dev -s "$fresh_session_name")
-  else
-    if [[ -n "$ZELLIJ" ]]; then
-      if ! zellij action switch-session --cwd "$resolved_dir" "$session_name"; then
-        zellij action switch-session --cwd "$resolved_dir" --layout dev "$session_name"
-      fi
-    else
-      (cd "$resolved_dir" && zellij --layout dev attach -c "$session_name")
-    fi
+  local bootstrap_script="$DEV_SETUP_DIR/scripts/herdr-dev-workspace.sh"
+  if [[ ! -x "$bootstrap_script" ]]; then
+    echo "Error: '$bootstrap_script' not found or not executable"
+    return 1
   fi
+
+  if [[ "$fresh" -eq 1 ]]; then
+    "$bootstrap_script" "$resolved_dir" "$session_name" --fresh || return 1
+  else
+    "$bootstrap_script" "$resolved_dir" "$session_name" || return 1
+  fi
+
+  if [[ -n "${HERDR_PANE_ID:-}" ]]; then
+    return 0
+  fi
+
+  exec herdr
 }
 
 wts() {
@@ -175,6 +195,25 @@ wts() {
   fi
 
   wt switch --no-cd -x 'workon "{{ worktree_path }}"' "$selected_branch"
+}
+
+# wtnew: Create branch worktree and open Herdr dev workspace
+# Usage: wtnew <branch> [base-ref]
+wtnew() {
+  if ! command -v wt >/dev/null 2>&1; then
+    echo "Error: wt command not found"
+    return 1
+  fi
+
+  local branch="$1"
+  local base="${2:-origin/main}"
+
+  if [[ -z "$branch" ]]; then
+    echo "Usage: wtnew <branch> [base-ref]"
+    return 1
+  fi
+
+  wt switch -c "$branch" -b "$base" --no-cd -x 'workon "{{ worktree_path }}"'
 }
 
 # workon-issue: Prepare issue worktree and open dev session (run agent manually in Agent tab)

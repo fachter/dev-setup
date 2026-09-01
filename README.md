@@ -5,8 +5,9 @@ Personal configuration files for macOS development environment.
 ## What's Included
 
 - **Neovim** - LazyVim-based configuration
-- **Ghostty** - Terminal emulator config (Tokyo Night theme)
-- **Zellij** - Terminal multiplexer with custom layouts
+- **Ghostty** - Terminal emulator config (Gruvbox Dark theme)
+- **Herdr** - Dev session manager with 4-tab workspace layout
+- **Zellij** - Terminal multiplexer with custom layouts (legacy workflows)
 - **tmux** - Alternative terminal multiplexer config
 - **Zsh** - Shell configuration with plugins
 - **Starship** - Cross-shell prompt (Tokyo Night preset)
@@ -22,7 +23,10 @@ Personal configuration files for macOS development environment.
 
 # Install required dependencies
 brew install --cask ghostty font-jetbrains-mono-nerd-font
-brew install neovim zellij tmux starship zsh-autosuggestions zsh-syntax-highlighting fd fzf
+brew install neovim zellij tmux starship zsh-autosuggestions zsh-syntax-highlighting fd fzf jq
+
+# Install Herdr (dev session manager)
+curl -fsSL https://herdr.dev/install.sh | sh
 ```
 
 ### Optional
@@ -52,6 +56,7 @@ cd ~/source/Config
 |--------|-------------|
 | `nvim/` | `~/.config/nvim` |
 | `ghostty/` | `~/.config/ghostty` |
+| `herdr/config.toml` | `~/.config/herdr/config.toml` |
 | `zellij/` | `~/.config/zellij` |
 | `wezterm/` | `~/.config/wezterm` |
 | `tmux/tmux.conf` | `~/.tmux.conf` |
@@ -71,18 +76,35 @@ cd ~/source/Config
 ./init_script.sh --clean
 ```
 
-### Zellij Sessions
+### Herdr Dev Sessions
 
-The `dev` layout has three tabs: **Neovim**, **Agent** (two stacked shells for Cursor `agent`), and **Terminal**.
+The default dev workspace has four tabs: **Neovim**, **Agent** (auto-started Cursor agent), and two **Terminal** tabs.
 
 ```bash
-# Start or attach a Zellij session for current or specified directory
+# Start or attach a Herdr dev workspace for current or specified directory
 workon [folder]
 
-# Always start a fresh session (never attach)
+# Always start a fresh workspace (never attach)
 workon --fresh [folder]
 
-# Prepare issue worktree and start/attach dev session (Agent tab: two terminals; run `agent` manually)
+# Switch/create Worktrunk worktree and open dev workspace
+wts [branch]
+
+# Create branch from origin/main, then open dev workspace
+wtnew my-feature
+wtnew my-feature origin/main
+
+# Worktrunk global defaults (via ~/.config/worktrunk/config.toml)
+# New wt worktrees are stored under ~/source/.worktrees/<repo>/<branch>/
+# .env, backend/.env, and frontend/.env are copied if present
+```
+
+### Zellij Sessions (legacy)
+
+These helpers still use Zellij layouts:
+
+```bash
+# Prepare issue worktree and start/attach dev session (Agent tab: run `agent` manually)
 workon-issue [issue-number]
 
 # Same as above, but always start fresh session
@@ -91,10 +113,9 @@ workon-issue --fresh [issue-number]
 # Worktrees are stored under ~/source/.worktrees/<owner-repo>/
 # Override with WORKTREE_BASE=/custom/path
 
-# Worktrunk global defaults (via ~/.config/worktrunk/config.toml)
-# New wt worktrees are stored under ~/source/.worktrees/<repo>/<branch>/
-# .env, backend/.env, and frontend/.env are copied if present
-
 # Start with fullstack layout (multiple panes)
 workon-fullstack [folder]
+
+# Start with Gemini CLI layout
+workon-lbf [folder]
 ```

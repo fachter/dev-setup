@@ -1,0 +1,21 @@
+onboarding = false
+
+[theme]
+name = "gruvbox"
+
+[terminal]
+new_cwd = "follow"
+
+[keys]
+switch_workspace = "prefix+shift+1..9"
+focus_agent = "prefix+alt+1..9"
+next_agent = "prefix+alt+j"
+previous_agent = "prefix+alt+k"
+navigate_workspace_up = ["k", "up"]
+navigate_workspace_down = ["j", "down"]
+navigate_pane_up = "ctrl+k"
+navigate_pane_down = "ctrl+j"
+
+[ui]
+prompt_new_tab_name = false
+hide_tab_bar_when_single_tab = false
