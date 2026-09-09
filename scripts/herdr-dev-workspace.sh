@@ -115,18 +115,7 @@ if [[ -z "$agent_pane_id" ]]; then
   exit 1
 fi
 
-agent_started=0
-for _ in {1..20}; do
-  if herdr agent start agent --kind cursor --pane "$agent_pane_id" >/dev/null 2>&1; then
-    agent_started=1
-    break
-  fi
-  sleep 0.25
-done
-
-if [[ "$agent_started" -eq 0 ]]; then
-  echo "Warning: Could not auto-start Cursor agent in Agent tab" >&2
-fi
+herdr pane run "$agent_pane_id" agent >/dev/null
 
 herdr tab create --workspace "$workspace_id" --label "Terminal" --cwd "$resolved_dir" --no-focus >/dev/null
 herdr tab create --workspace "$workspace_id" --label "Terminal" --cwd "$resolved_dir" --no-focus >/dev/null
