@@ -12,6 +12,7 @@ Personal configuration files for macOS development environment.
 - **Zsh** - Shell configuration with plugins
 - **Starship** - Cross-shell prompt (Tokyo Night preset)
 - **WezTerm** - Alternative terminal emulator config
+- **Finicky** - Browser router (Zen by default, Accenture hosts in Chrome)
 
 ## Prerequisites
 
@@ -63,6 +64,7 @@ cd ~/source/Config
 | `dotfiles/zshrc` | `~/.zshrc` |
 | `starship/starship.toml` | `~/.config/starship.toml` |
 | `worktrunk/config.toml` | `~/.config/worktrunk/config.toml` |
+| `finicky/finicky.js` | `~/.finicky.js` |
 
 ## Usage
 

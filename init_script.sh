@@ -70,4 +70,7 @@ link_config "worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
 # Herdr (links the global user config file)
 link_config "herdr/config.toml" "$HOME/.config/herdr/config.toml"
 
+# Finicky (links the browser routing config)
+link_config "finicky/finicky.js" "$HOME/.finicky.js"
+
 echo "Setup complete! Restart your terminal or run 'source ~/.zshrc'"
