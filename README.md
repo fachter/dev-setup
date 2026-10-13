@@ -12,7 +12,7 @@ Personal configuration files for macOS development environment.
 - **Zsh** - Shell configuration with plugins
 - **Starship** - Cross-shell prompt (Tokyo Night preset)
 - **WezTerm** - Alternative terminal emulator config
-- **Finicky** - Browser router (Zen by default, Accenture hosts in Chrome)
+- **Finicky** - Browser router (Zen by default; Accenture hosts, Workday, and Claude/Cursor login in Chrome)
 
 ## Prerequisites
 

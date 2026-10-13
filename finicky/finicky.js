@@ -8,6 +8,9 @@
 // Hosts that require an Accenture login. Add more as they show up.
 const accentureHosts = ["accenture.com"];
 
+const claudeLoginHosts = ["claude.ai", "platform.claude.com"];
+const cursorLoginHosts = ["cursor.com", "cursor.sh"];
+
 /**
  * @param {URL} url
  * @param {string[]} hosts
@@ -15,6 +18,58 @@ const accentureHosts = ["accenture.com"];
 function matchesHost(url, hosts) {
   return hosts.some(
     (host) => url.hostname === host || url.hostname.endsWith(`.${host}`),
+  );
+}
+
+/**
+ * @param {string} pathname
+ * @param {string} prefix
+ */
+function matchesPath(pathname, prefix) {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
+ * Accenture Workday, including the auth gateway under /wday/authgwy/accenture.
+ * @param {URL} url
+ */
+function matchesWorkday(url) {
+  if (url.hostname !== "wd103.myworkday.com") return false;
+  return url.pathname.split("/").includes("accenture");
+}
+
+/**
+ * Claude Code and claude.ai sign-in. The rest of the site stays in Zen.
+ * @param {URL} url
+ */
+function matchesClaudeLogin(url) {
+  if (!matchesHost(url, claudeLoginHosts)) return false;
+  return (
+    matchesPath(url.pathname, "/login") || matchesPath(url.pathname, "/oauth")
+  );
+}
+
+/**
+ * Cursor editor and CLI sign-in. The rest of the site stays in Zen.
+ * @param {URL} url
+ */
+function matchesCursorLogin(url) {
+  if (!matchesHost(url, cursorLoginHosts)) return false;
+  return (
+    matchesPath(url.pathname, "/loginDeepControl") ||
+    matchesPath(url.pathname, "/login")
+  );
+}
+
+/**
+ * @param {URL} url
+ */
+function opensInChrome(url) {
+  return (
+    matchesHost(url, accentureHosts) ||
+    matchesWorkday(url) ||
+    matchesClaudeLogin(url) ||
+    matchesCursorLogin(url)
   );
 }
 
@@ -48,9 +103,9 @@ function unwrapSafelink(url) {
 /**
  * @param {URL} url
  */
-function accentureSafelink(url) {
+function chromeSafelink(url) {
   const inner = unwrapSafelink(url);
-  return inner != null && matchesHost(inner, accentureHosts) ? inner : null;
+  return inner != null && opensInChrome(inner) ? inner : null;
 }
 
 /** @type {FinickyConfig} */
@@ -58,14 +113,14 @@ export default {
   defaultBrowser: "Zen",
   rewrite: [
     {
-      // Replace only Safe Links whose hidden target is an Accenture host.
-      match: (url) => accentureSafelink(url) != null,
-      url: (url) => accentureSafelink(url) ?? url,
+      // Replace Safe Links whose hidden target should open in Chrome.
+      match: (url) => chromeSafelink(url) != null,
+      url: (url) => chromeSafelink(url) ?? url,
     },
   ],
   handlers: [
     {
-      match: (url) => matchesHost(url, accentureHosts),
+      match: opensInChrome,
       browser: "Google Chrome",
     },
   ],
