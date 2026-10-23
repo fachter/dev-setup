@@ -28,6 +28,7 @@ fi
 mkdir -p ~/.config
 mkdir -p ~/.config/worktrunk
 mkdir -p ~/.config/herdr
+mkdir -p ~/.config/aerospace
 
 # 4. Helper function to create symlinks safely
 # Usage: link_config [source_subdir] [target_path]
@@ -72,5 +73,8 @@ link_config "herdr/config.toml" "$HOME/.config/herdr/config.toml"
 
 # Finicky (links the browser routing config)
 link_config "finicky/finicky.js" "$HOME/.finicky.js"
+
+# AeroSpace (links the tiling window manager config)
+link_config "aerospace/aerospace.toml" "$HOME/.config/aerospace/aerospace.toml"
 
 echo "Setup complete! Restart your terminal or run 'source ~/.zshrc'"

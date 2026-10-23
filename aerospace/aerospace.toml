@@ -1,0 +1,151 @@
+# AeroSpace config
+# Reference: https://nikitabobko.github.io/AeroSpace/guide
+
+after-startup-command = []
+
+start-at-login = true
+
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+accordion-padding = 30
+
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'auto'
+
+on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+
+automatically-unhide-macos-hidden-apps = false
+
+[key-mapping]
+preset = 'qwerty'
+
+[gaps]
+inner.horizontal = 8
+inner.vertical = 8
+outer.left = 8
+outer.bottom = 8
+outer.top = 8
+outer.right = 8
+
+[mode.main.binding]
+# Layouts: tiles, or accordion (tab-like stacking)
+cmd-alt-slash = 'layout tiles horizontal vertical'
+cmd-alt-comma = 'layout accordion horizontal vertical'
+cmd-alt-f = 'fullscreen'
+cmd-alt-shift-space = 'layout floating tiling'
+
+# Focus (vim-style, crosses monitors)
+cmd-alt-h = 'focus --boundaries all-monitors-outer-frame left'
+cmd-alt-j = 'focus --boundaries all-monitors-outer-frame down'
+cmd-alt-k = 'focus --boundaries all-monitors-outer-frame up'
+cmd-alt-l = 'focus --boundaries all-monitors-outer-frame right'
+
+# Move windows (vim-style, crosses monitors)
+cmd-alt-shift-h = 'move --boundaries all-monitors-outer-frame left'
+cmd-alt-shift-j = 'move --boundaries all-monitors-outer-frame down'
+cmd-alt-shift-k = 'move --boundaries all-monitors-outer-frame up'
+cmd-alt-shift-l = 'move --boundaries all-monitors-outer-frame right'
+
+# Resize
+cmd-alt-minus = 'resize smart -50'
+cmd-alt-equal = 'resize smart +50'
+
+# Named workspaces
+cmd-alt-t = 'workspace T' # Terminal
+cmd-alt-b = 'workspace B' # Browser
+cmd-alt-c = 'workspace C' # Chat / Mail
+cmd-alt-n = 'workspace N' # Notes
+cmd-alt-m = 'workspace M' # Music
+cmd-alt-a = 'workspace A' # AI
+
+# Free workspaces
+cmd-alt-1 = 'workspace 1'
+cmd-alt-2 = 'workspace 2'
+cmd-alt-3 = 'workspace 3'
+cmd-alt-4 = 'workspace 4'
+cmd-alt-5 = 'workspace 5'
+cmd-alt-6 = 'workspace 6'
+cmd-alt-7 = 'workspace 7'
+cmd-alt-8 = 'workspace 8'
+cmd-alt-9 = 'workspace 9'
+
+# Move focused window to workspace
+cmd-alt-shift-t = 'move-node-to-workspace T'
+cmd-alt-shift-b = 'move-node-to-workspace B'
+cmd-alt-shift-c = 'move-node-to-workspace C'
+cmd-alt-shift-n = 'move-node-to-workspace N'
+cmd-alt-shift-m = 'move-node-to-workspace M'
+cmd-alt-shift-a = 'move-node-to-workspace A'
+cmd-alt-shift-1 = 'move-node-to-workspace 1'
+cmd-alt-shift-2 = 'move-node-to-workspace 2'
+cmd-alt-shift-3 = 'move-node-to-workspace 3'
+cmd-alt-shift-4 = 'move-node-to-workspace 4'
+cmd-alt-shift-5 = 'move-node-to-workspace 5'
+cmd-alt-shift-6 = 'move-node-to-workspace 6'
+cmd-alt-shift-7 = 'move-node-to-workspace 7'
+cmd-alt-shift-8 = 'move-node-to-workspace 8'
+cmd-alt-shift-9 = 'move-node-to-workspace 9'
+
+cmd-alt-tab = 'workspace-back-and-forth'
+cmd-alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+
+cmd-alt-shift-semicolon = 'mode service'
+
+# 'secondary' only matches with exactly two monitors; otherwise these fall back to the main monitor.
+# Unlisted workspaces (C, N, M, A, 5-9) go to the main monitor.
+[workspace-to-monitor-force-assignment]
+T = 'secondary'
+B = 'secondary'
+1 = 'secondary'
+2 = 'secondary'
+3 = 'built-in'
+4 = 'built-in'
+
+[mode.service.binding]
+esc = ['reload-config', 'mode main']
+r = ['flatten-workspace-tree', 'mode main'] # reset layout
+f = ['layout floating tiling', 'mode main']
+backspace = ['close-all-windows-but-current', 'mode main']
+
+cmd-alt-shift-h = ['join-with left', 'mode main']
+cmd-alt-shift-j = ['join-with down', 'mode main']
+cmd-alt-shift-k = ['join-with up', 'mode main']
+cmd-alt-shift-l = ['join-with right', 'mode main']
+
+# App -> workspace assignment
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+run = 'move-node-to-workspace T'
+
+[[on-window-detected]]
+if.app-id = 'app.zen-browser.zen'
+run = 'move-node-to-workspace B'
+
+[[on-window-detected]]
+if.app-id = 'com.google.Chrome'
+run = 'move-node-to-workspace B'
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.teams2'
+run = 'move-node-to-workspace C'
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.Outlook'
+run = 'move-node-to-workspace C'
+
+[[on-window-detected]]
+if.app-id = 'notion.id'
+run = 'move-node-to-workspace N'
+
+[[on-window-detected]]
+if.app-id = 'com.spotify.client'
+run = 'move-node-to-workspace M'
+
+[[on-window-detected]]
+if.app-id = 'com.todesktop.230313mzl4w4u92' # Cursor
+run = 'move-node-to-workspace A'
+
+[[on-window-detected]]
+if.app-id = 'com.linguee.DeepLCopyTranslator'
+run = 'move-node-to-workspace A'
