@@ -17,6 +17,7 @@ export CPPFLAGS="-I/opt/homebrew/opt/postgresql@17/include"
 export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"
 
 # Go
+eval "$(mise activate zsh)"
 export PATH="$(go env GOPATH)/bin:$PATH"
 
 # Android SDK
@@ -184,7 +185,7 @@ wts() {
   done
 
   if [[ "$has_branch" -eq 1 ]]; then
-    wt switch --no-cd -x 'workon "{{ worktree_path }}"' "$@"
+    wt switch --no-cd -x zsh "$@" -- -ic 'workon "$1"' _ '{{ worktree_path }}'
     return
   fi
 
@@ -194,7 +195,7 @@ wts() {
     return 1
   fi
 
-  wt switch --no-cd -x 'workon "{{ worktree_path }}"' "$selected_branch"
+  wt switch --no-cd -x zsh "$selected_branch" -- -ic 'workon "$1"' _ '{{ worktree_path }}'
 }
 
 # wtnew: Create branch worktree and open Herdr dev workspace
@@ -213,7 +214,7 @@ wtnew() {
     return 1
   fi
 
-  wt switch -c "$branch" -b "$base" --no-cd -x 'workon "{{ worktree_path }}"'
+  wt switch -c "$branch" -b "$base" --no-cd -x zsh -- -ic 'workon "$1"' _ '{{ worktree_path }}'
 }
 
 # workon-issue: Prepare issue worktree and open dev session (run agent manually in Agent tab)
