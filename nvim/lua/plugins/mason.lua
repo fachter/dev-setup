@@ -14,6 +14,7 @@ return {
         "shfmt",
         "flake8",
         "ty",
+        "rust-analyzer",
         -- Go
         "gopls",
         "goimports",
